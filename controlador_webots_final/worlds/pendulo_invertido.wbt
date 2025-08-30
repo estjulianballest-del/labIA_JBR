@@ -1,0 +1,127 @@
+#VRML_SIM R2025a utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/Floor.proto"
+
+WorldInfo {
+  info [
+    "Inverted pendulum on a track"
+  ]
+  title "Inverted Pendulum"
+  basicTimeStep 16
+}
+Viewpoint {
+  orientation 0.2289007734433325 -0.1341884972551655 -0.9641565656683798 3.9481241236692872
+  position 3.176136682798244 -4.2974290170900815 2.173719868214627
+}
+TexturedBackground {}
+TexturedBackgroundLight {}
+Floor {}
+DEF TRACK Solid {
+  translation 0 0 0.01
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 0.2 0.2 0.2
+        roughness 0.2
+      }
+      geometry Box {
+        size 2 0.1 0.02
+      }
+    }
+  ]
+  name "track"
+  boundingObject Box {
+    size 2 0.1 0.02
+  }
+}
+Robot {
+  children [
+    SliderJoint {
+      jointParameters JointParameters {
+        # CAMBIO: Carro empieza en el centro (posición 0).
+        position 0
+        axis 1 0 0
+        minStop -0.8
+        maxStop 0.8
+      }
+      device [
+        LinearMotor {
+          name "cart motor"
+          maxForce 20
+        }
+        PositionSensor {
+          name "cart position sensor"
+        }
+      ]
+      endPoint DEF CART Solid {
+        # CAMBIO: La traslación se ajusta a la posición inicial del Joint.
+        translation 0 0 0.05
+        # CAMBIO: Rotación limpia (identidad).
+        rotation 0 0 1 0
+        children [
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.5 0.5 1
+              roughness 1
+              metalness 0
+            }
+            geometry Box {
+              size 0.2 0.1 0.05
+            }
+          }
+          HingeJoint {
+            jointParameters HingeJointParameters {
+              # CAMBIO CLAVE: Ángulo inicial casi vertical (0.02 rad) para que el PID actúe.
+              position 0.02
+              axis 0 1 0
+              anchor 0 0 0.025
+            }
+            device [
+              PositionSensor {
+                name "pole position sensor"
+              }
+            ]
+            endPoint Solid {
+              # CAMBIO: Posición del péndulo relativa a su centro de masa (altura/2).
+              translation 0 0 0.25
+              # CAMBIO: Rotación limpia (identidad), la controla el HingeJoint.
+              rotation 0 0 1 0
+              children [
+                DEF POLE Shape {
+                  appearance PBRAppearance {
+                    baseColor 1 0.5 0.5
+                    roughness 1
+                    metalness 0
+                  }
+                  geometry Cylinder {
+                    height 0.5
+                    radius 0.01
+                  }
+                }
+              ]
+              name "pole"
+              boundingObject Cylinder {
+                height 0.5
+                radius 0.01
+              }
+              physics Physics {
+                mass 0.1
+              }
+            }
+          }
+        ]
+        name "cart"
+        boundingObject Box {
+          size 0.2 0.1 0.05
+        }
+        physics Physics {
+          mass 1
+        }
+      }
+    }
+  ]
+  name "inverted_pendulum"
+  controller "inverted_pendulum_controller"
+}
